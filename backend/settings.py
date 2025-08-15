@@ -97,17 +97,36 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # Primary: MySQL/MariaDB (requires server up). Fallback: SQLite when USE_SQLITE=1
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
+# Railway/Production environment detection
+IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
+DATABASE_URL = os.getenv('DATABASE_URL')
 USE_SQLITE = os.getenv('USE_SQLITE', '0').lower() in ('1','true','yes','on')
 
-# Railway automatic database URL detection
-DATABASE_URL = os.getenv('DATABASE_URL')
-
-if DATABASE_URL:
-    # Railway MySQL connection string format
+if IS_RAILWAY and DATABASE_URL:
+    # Railway MySQL connection using DATABASE_URL
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.parse(DATABASE_URL)
     }
+    print(f"🚂 Railway detected - Using DATABASE_URL")
+elif IS_RAILWAY:
+    # Railway with manual MySQL variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('MYSQL_DATABASE', 'railway'),
+            'USER': os.getenv('MYSQL_USER', 'root'),
+            'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+            'HOST': os.getenv('MYSQL_HOST', 'mysql.railway.internal'),
+            'PORT': os.getenv('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'autocommit': True,
+                'charset': 'utf8mb4',
+            }
+        }
+    }
+    print(f"🚂 Railway detected - Using manual MySQL config")
 elif USE_SQLITE:
     DATABASES = {
         'default': {
@@ -115,21 +134,24 @@ elif USE_SQLITE:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+    print("📁 Using SQLite database")
 else:
-    # Manual MySQL configuration (for local development)
+    # Local development MySQL configuration
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': os.getenv('DATABASE_BD', 'railway'),
             'USER': os.getenv('DATABASE_USER', 'root'),
             'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-            'HOST': os.getenv('DATABASE_SERVER', 'mysql.railway.internal'),
+            'HOST': os.getenv('DATABASE_SERVER', 'localhost'),
             'PORT': os.getenv('DATABASE_PORT', '3306'),
             'OPTIONS': {
-                'autocommit': True
+                'autocommit': True,
+                'charset': 'utf8mb4',
             }
         }
     }
+    print("🏠 Using local MySQL configuration")
 
 
 # Password validation
@@ -196,7 +218,6 @@ if IS_PRODUCTION:
     DEBUG = False
     ALLOWED_HOSTS = ["*"]  # Railway/Vercel handle the domain validation
     
-    
     # Static files configuration for production
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATIC_URL = '/static/'
@@ -221,6 +242,11 @@ if IS_PRODUCTION:
     
     # Trust Railway/Vercel proxy headers
     USE_TZ = True
+    
+    # Railway specific settings
+    if 'RAILWAY_ENVIRONMENT' in os.environ:
+        print("🚂 Railway production environment detected")
+        # Additional Railway-specific configurations can go here
     
     # Logging configuration for production
     LOGGING = {
