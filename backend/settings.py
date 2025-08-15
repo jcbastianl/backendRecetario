@@ -99,25 +99,32 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 USE_SQLITE = os.getenv('USE_SQLITE', '0').lower() in ('1','true','yes','on')
 
-if USE_SQLITE:
+# Railway automatic database URL detection
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    # Railway MySQL connection string format
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+elif USE_SQLITE:
     DATABASES = {
         'default': {
-            #'ENGINE': 'django.db.backends.sqlite3',
-            #'ENGINE': 'mysql.connector.django',
-            'ENGINE': 'django.db.backends.mysql',
+            'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
+    # Manual MySQL configuration (for local development)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            #'ENGINE': 'mysql.connector.django',
-            'NAME': os.getenv('DATABASE_BD'),
-            'USER': os.getenv('DATABASE_USER'),
+            'NAME': os.getenv('DATABASE_BD', 'railway'),
+            'USER': os.getenv('DATABASE_USER', 'root'),
             'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-            'HOST': os.getenv('DATABASE_SERVER'),
-            'PORT': os.getenv('DATABASE_PORT'),
+            'HOST': os.getenv('DATABASE_SERVER', 'mysql.railway.internal'),
+            'PORT': os.getenv('DATABASE_PORT', '3306'),
             'OPTIONS': {
                 'autocommit': True
             }
