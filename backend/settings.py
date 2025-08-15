@@ -102,7 +102,8 @@ USE_SQLITE = os.getenv('USE_SQLITE', '0').lower() in ('1','true','yes','on')
 if USE_SQLITE:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
+            #'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'mysql.connector.django',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
