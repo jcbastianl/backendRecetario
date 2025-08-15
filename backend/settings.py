@@ -66,10 +66,12 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'https://recetario-vert.vercel.app',
 ]  
 CORS_ORIGIN_REGEX_WHITELIST = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
+    'https://recetario-vert.vercel.app',
 ]
 
 
@@ -246,6 +248,7 @@ if IS_PRODUCTION:
     CORS_ALLOWED_ORIGINS = [
         "https://recetario-frontend.vercel.app",
         "https://recetario-app.vercel.app",
+        "https://recetario-vert.vercel.app",  # Tu frontend actual
         "https://tu-frontend.vercel.app",  # Cambiar por tu URL real
     ]
     
