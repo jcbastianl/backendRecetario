@@ -103,6 +103,14 @@ IS_RAILWAY = 'RAILWAY_ENVIRONMENT' in os.environ
 DATABASE_URL = os.getenv('DATABASE_URL')
 USE_SQLITE = os.getenv('USE_SQLITE', '0').lower() in ('1','true','yes','on')
 
+# Debug: Print environment variables
+print(f"🔍 Debug - IS_RAILWAY: {IS_RAILWAY}")
+print(f"🔍 Debug - DATABASE_URL present: {bool(DATABASE_URL)}")
+print(f"🔍 Debug - MYSQL_HOST: {os.getenv('MYSQL_HOST', 'NOT SET')}")
+print(f"🔍 Debug - MYSQL_USER: {os.getenv('MYSQL_USER', 'NOT SET')}")
+print(f"🔍 Debug - MYSQL_PASSWORD present: {bool(os.getenv('MYSQL_PASSWORD'))}")
+print(f"🔍 Debug - MYSQL_DATABASE: {os.getenv('MYSQL_DATABASE', 'NOT SET')}")
+
 if IS_RAILWAY and DATABASE_URL:
     # Railway MySQL connection using DATABASE_URL
     import dj_database_url
@@ -112,21 +120,29 @@ if IS_RAILWAY and DATABASE_URL:
     print(f"🚂 Railway detected - Using DATABASE_URL")
 elif IS_RAILWAY:
     # Railway with manual MySQL variables
+    mysql_password = os.getenv('MYSQL_PASSWORD')
+    if not mysql_password:
+        print("❌ ERROR: MYSQL_PASSWORD not found in environment!")
+    
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': os.getenv('MYSQL_DATABASE', 'railway'),
             'USER': os.getenv('MYSQL_USER', 'root'),
-            'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+            'PASSWORD': mysql_password,
             'HOST': os.getenv('MYSQL_HOST', 'mysql.railway.internal'),
             'PORT': os.getenv('MYSQL_PORT', '3306'),
             'OPTIONS': {
                 'autocommit': True,
                 'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             }
         }
     }
     print(f"🚂 Railway detected - Using manual MySQL config")
+    print(f"   - Host: {os.getenv('MYSQL_HOST')}")
+    print(f"   - User: {os.getenv('MYSQL_USER')}")
+    print(f"   - Database: {os.getenv('MYSQL_DATABASE')}")
 elif USE_SQLITE:
     DATABASES = {
         'default': {
