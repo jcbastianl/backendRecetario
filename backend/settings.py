@@ -103,14 +103,16 @@ if USE_SQLITE:
     DATABASES = {
         'default': {
             #'ENGINE': 'django.db.backends.sqlite3',
-            'ENGINE': 'mysql.connector.django',
+            #'ENGINE': 'mysql.connector.django',
+            'ENGINE': 'django.db.backends.mysql',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'mysql.connector.django',
+            'ENGINE': 'django.db.backends.mysql',
+            #'ENGINE': 'mysql.connector.django',
             'NAME': os.getenv('DATABASE_BD'),
             'USER': os.getenv('DATABASE_USER'),
             'PASSWORD': os.getenv('DATABASE_PASSWORD'),
