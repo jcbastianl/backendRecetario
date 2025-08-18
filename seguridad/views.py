@@ -23,27 +23,31 @@ from utilidades import utilidades
 class Clase1(APIView):
     
     def post(self, request):
-        if request.data.get("nombre")==None or not request.data.get("nombre"):
+        nombre = request.data.get("nombre")
+        correo = request.data.get("correo") or request.data.get("email")
+        password = request.data.get("password")
+        
+        if nombre==None or not nombre:
             return JsonResponse({"estado":"error", "mensaje":"El campo nombre es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
-        if request.data.get("correo")==None or not request.data.get("correo"):
-            return JsonResponse({"estado":"error", "mensaje":"El correo nombre es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
-        if request.data.get("password")==None or not request.data.get("password"):
+        if correo==None or not correo:
+            return JsonResponse({"estado":"error", "mensaje":"El campo correo/email es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
+        if password==None or not password:
             return JsonResponse({"estado":"error", "mensaje":"El campo password es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
         
         
-        if User.objects.filter(email=request.data["correo"]).exists():
-            return JsonResponse({"estado":"error", "mensaje":f"El correo {request.data["correo"]} no está disponible"}, status=HTTPStatus.BAD_REQUEST)
+        if User.objects.filter(email=correo).exists():
+            return JsonResponse({"estado":"error", "mensaje":f"El correo {correo} no está disponible"}, status=HTTPStatus.BAD_REQUEST)
         
         
         token = uuid.uuid4()
         url = f"{os.getenv('BASE_URL')}api/v1/seguridad/verificacion/{token}"
         try:
-            u=User.objects.create_user(username=request.data["correo"], password=request.data["password"], email=request.data["correo"], first_name=request.data["nombre"], last_name="", is_active=0)
+            u=User.objects.create_user(username=correo, password=password, email=correo, first_name=nombre, last_name="", is_active=0)
             UsersMetadata.objects.create(token=token, user_id=u.id)
             
             html=f""" 
             <h3>Verificación de cuenta</h3>
-            Hola {request.data["nombre"]} te haz registrado exitosamente. Para activar tu cuenta haz clic en el siguiente enlace:<br/>
+            Hola {nombre} te haz registrado exitosamente. Para activar tu cuenta haz clic en el siguiente enlace:<br/>
             <a href="{url}">{url}</a>
             <br/>
             o copia y pega la siguiente URL en tu navegador favorito:
@@ -53,9 +57,9 @@ class Clase1(APIView):
                         # Ejecutar email en hilo separado
             def send_email_async():
                 try:
-                    utilidades.sendMail(html, "Verificación", request.data["correo"])
+                    utilidades.sendMail(html, "Verificación", correo)
                 except Exception as email_error:
-                    print(f"[WARNING] Error enviando email a {request.data['correo']}: {email_error}")
+                    print(f"[WARNING] Error enviando email a {correo}: {email_error}")
             
             # Ejecutar email en hilo separado
             email_thread = threading.Thread(target=send_email_async)
@@ -93,20 +97,24 @@ class Clase3(APIView):
     
     def post(self, request):
         
-        if request.data.get("correo")==None or not request.data.get("correo"):
-            return JsonResponse({"estado":"error", "mensaje":"El correo nombre es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
-        if request.data.get("password")==None or not request.data.get("password"):
+        # Aceptar tanto 'correo' como 'email'
+        correo = request.data.get("correo") or request.data.get("email")
+        password = request.data.get("password")
+        
+        if correo==None or not correo:
+            return JsonResponse({"estado":"error", "mensaje":"El campo correo/email es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
+        if password==None or not password:
             return JsonResponse({"estado":"error", "mensaje":"El campo password es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
         
         
         #select * from auth_user where correo=correo
         try:
-            user = User.objects.filter(email=request.data["correo"]).get()
+            user = User.objects.filter(email=correo).get()
         except User.DoesNotExist:
             return JsonResponse({"estado":"error", "mensaje":"Recurso no disponible"}, status=HTTPStatus.NOT_FOUND)
         
         
-        auth = authenticate(request, username=request.data.get("correo"), password=request.data.get("password") )
+        auth = authenticate(request, username=correo, password=password )
         if auth is not None:
             fecha = datetime.now()
             despues = fecha + timedelta(days=1)
