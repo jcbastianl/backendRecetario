@@ -63,6 +63,33 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# CORS settings for development and all environments
+CORS_ALLOW_ALL_ORIGINS = True  # Permite todos los orígenes (para desarrollo)
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_REDIRECTS = True  # Permite redirecciones con CORS
+
+# Headers permitidos
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Métodos HTTP permitidos
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 
 ROOT_URLCONF = 'backend.urls'
@@ -243,6 +270,7 @@ if IS_PRODUCTION:
     ]
     
     CORS_ALLOW_CREDENTIALS = True
+    CORS_ALLOW_REDIRECTS = True  # Permite redirecciones con CORS
     
     # Security settings
     SECURE_BROWSER_XSS_FILTER = True
