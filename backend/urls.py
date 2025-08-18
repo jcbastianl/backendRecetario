@@ -15,12 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from .media_views import serve_media
 
 # --- Configuración de Swagger (Documentación) ---
 scheme_view = get_schema_view(
@@ -70,9 +71,16 @@ urlpatterns = [
     # Rutas para la documentación de la API
     path('documentacion/', scheme_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', scheme_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    
+    # Ruta personalizada para servir archivos media en producción
+    re_path(r'^uploads/(?P<path>.*)$', serve_media, name='media'),
 ]
 
 # --- FIN DE LA CORRECCIÓN ---
 
-# Esta línea es para servir archivos de medios (imágenes) durante el desarrollo Y PRODUCCIÓN
+# Servir archivos de medios (imágenes) SIEMPRE - tanto en desarrollo como en producción
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# También agregar configuración para archivos estáticos si es necesario
+if not settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

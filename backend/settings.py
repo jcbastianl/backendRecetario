@@ -289,7 +289,9 @@ if IS_PRODUCTION:
     # Railway specific settings
     if 'RAILWAY_ENVIRONMENT' in os.environ:
         print("🚂 Railway production environment detected")
-        # Additional Railway-specific configurations can go here
+        # Ensure media serving works in Railway
+        WHITENOISE_USE_FINDERS = True
+        WHITENOISE_AUTOREFRESH = True
     
     # Logging configuration for production
     LOGGING = {
