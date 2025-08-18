@@ -86,36 +86,63 @@ class Clase1(APIView):
         }
     )
     def post(self, request):
-        if request.data.get("nombre") is None or not request.data['nombre']:
+        # Detectar si es FormData o JSON
+        if request.content_type and request.content_type.startswith('multipart/form-data'):
+            # FormData - usar request.data y request.FILES
+            data = request.data
+            files = request.FILES
+        else:
+            # JSON - usar request.data pero manejar diferente
+            data = request.data
+            files = request.FILES if hasattr(request, 'FILES') else {}
+        
+        if data.get("nombre") is None or not data.get('nombre'):
             return JsonResponse({"estado": "error", "mensaje": "El campo nombre es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
-        if request.data.get("tiempo") is None or not request.data['tiempo']:
+        if data.get("tiempo") is None or not data.get('tiempo'):
             return JsonResponse({"estado": "error", "mensaje": "El campo tiempo es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
-        if request.data.get("descripcion") is None or not request.data['descripcion']:
+        if data.get("descripcion") is None or not data.get('descripcion'):
             return JsonResponse({"estado": "error", "mensaje": "El campo descripcion es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
-        if request.data.get("categoria_id") is None or not request.data['categoria_id']:
+        if data.get("categoria_id") is None or not data.get('categoria_id'):
             return JsonResponse({"estado": "error", "mensaje": "El campo categoria_id es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
         
         #validamos que no exista la categoria_id
         try:
-            categoria = Categoria.objects.filter(pk=request.data.get('categoria_id')).get()
+            categoria = Categoria.objects.filter(pk=data.get('categoria_id')).get()
         except Categoria.DoesNotExist:
             return JsonResponse({"estado": "error", "mensaje": "La categoria no existe"}, status=HTTPStatus.BAD_REQUEST)
         
         
-        #select * from recetas where nombre = request.data.get('nombre')
+        #select * from recetas where nombre = data.get('nombre')
         #validamos que el nombre de la receta este disponible
-        if Receta.objects.filter(nombre=request.data.get('nombre')).exists():
+        if Receta.objects.filter(nombre=data.get('nombre')).exists():
             return JsonResponse({"estado": "error", "mensaje": "El nombre de la receta ya existe"}, status=HTTPStatus.BAD_REQUEST)
+        
+        # Manejar la foto - verificar si existe
+        if 'foto' not in files and 'foto' not in data:
+            return JsonResponse({"estado": "error", "mensaje": "El campo foto es obligatorio"}, status=HTTPStatus.BAD_REQUEST)
         
         fs = FileSystemStorage()
         try:
-            foto = f"{datetime.datetime.now().timestamp()}{os.path.splitext(str(request.FILES['foto'].name))[1]}"
+            # Intentar obtener la foto de FILES primero, luego de data
+            foto_file = files.get('foto') or data.get('foto')
+            if not foto_file:
+                return JsonResponse({"estado": "error", "mensaje": "No se pudo obtener la imagen"}, status=HTTPStatus.BAD_REQUEST)
+                
+            foto = f"{datetime.datetime.now().timestamp()}{os.path.splitext(str(foto_file.name))[1]}"
         except Exception as e:
             return JsonResponse({"estado": "error", "mensaje": "Error al procesar la imagen: " + str(e)}, status=HTTPStatus.BAD_REQUEST)
-        if request.FILES['foto'].content_type in ('image/jpeg','image/png'):
+        
+        # Verificar tipo de contenido de la imagen
+        if hasattr(foto_file, 'content_type'):
+            content_type = foto_file.content_type
+        else:
+            # Fallback para casos donde no hay content_type
+            content_type = 'image/jpeg'  # Asumimos JPEG por defecto
+            
+        if content_type in ('image/jpeg','image/png'):
             # Guardar archivo (una sola vez)
             try:
-                fs.save(f"recetas/{foto}", request.FILES['foto'])
+                fs.save(f"recetas/{foto}", foto_file)
             except Exception as e:
                 return JsonResponse({"estado": "error", "mensaje": f"Error al procesar la imagen: {str(e)}"}, status=HTTPStatus.BAD_REQUEST)
 
@@ -131,10 +158,10 @@ class Clase1(APIView):
             # Crear receta
             try:
                 Receta.objects.create(
-                    nombre=request.data['nombre'],
-                    tiempo=request.data.get('tiempo'),
-                    descripcion=request.data.get('descripcion'),
-                    categoria_id=request.data.get('categoria_id'),
+                    nombre=data['nombre'],
+                    tiempo=data.get('tiempo'),
+                    descripcion=data.get('descripcion'),
+                    categoria_id=data.get('categoria_id'),
                     foto=foto,
                     user_id=resuelto['id'],
                 )
