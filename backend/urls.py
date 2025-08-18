@@ -74,6 +74,5 @@ urlpatterns = [
 
 # --- FIN DE LA CORRECCIÓN ---
 
-# Esta línea es para servir archivos de medios (imágenes) durante el desarrollo
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Esta línea es para servir archivos de medios (imágenes) durante el desarrollo Y PRODUCCIÓN
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
