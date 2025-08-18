@@ -15,5 +15,5 @@ class RecetaSerializer(serializers.ModelSerializer):
         fields = ("id","nombre","slug","tiempo","descripcion","fecha","categoria","categoria_id","imagen","user_id","user")
 
     def get_imagen(self,obj):
-        return f"{os.getenv('BASE_URL')}/uploads/recetas/{obj.foto}" 
+        return f"{os.getenv('BASE_URL')}uploads/recetas/{obj.foto}" 
     

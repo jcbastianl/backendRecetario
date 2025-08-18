@@ -123,7 +123,7 @@ class Clase2(APIView):
                     "id": data.id,
                     "nombre": data.nombre,
                     "slug": data.slug,
-                    "imagen": f"{os.getenv('BASE_URL')}/uploads/recetas/{data.foto}" ,
+                    "imagen": f"{os.getenv('BASE_URL')}uploads/recetas/{data.foto}" ,
                     "descripcion": data.descripcion,
                     "tiempo": data.tiempo,
                     "categoria_id": data.categoria_id,
